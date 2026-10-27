@@ -1,0 +1,10 @@
+{
+  "name": "Fast GPT",
+  "description": "All-in-one expert assistant for creative writing, coding \u0026 technical debugging, 3D/2D visual prompts, structured tables, and multilingual learning.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fast GPT - Advanced AI Assistant</title>
+    <meta name="description" content="Fast GPT - Advanced AI Assistant with ultra-fast intelligence, deep reasoning, web grounding, and real-time speech." />
+    <meta property="og:title" content="Fast GPT - Advanced AI Assistant" />
+    <meta property="og:description" content="Fast GPT - Advanced AI Assistant with ultra-fast intelligence, deep reasoning, web grounding, and real-time speech." />
+    <meta name="theme-color" content="#212121" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Fast GPT" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script>
+      (function() {
+        // Intercept Vite HMR and Ping WebSocket connections to prevent 'WebSocket closed without opened' errors in cloud iframe environment
+        if (typeof window !== 'undefined' && window.WebSocket) {
+          var OrigWebSocket = window.WebSocket;
+          function MockViteWebSocket(url, protocols) {
+            var isViteHmr = (protocols === 'vite-hmr' || protocols === 'vite-ping') ||
+              (Array.isArray(protocols) && (protocols.indexOf('vite-hmr') !== -1 || protocols.indexOf('vite-ping') !== -1)) ||
+              (typeof url === 'string' && (url.indexOf('vite') !== -1 || url.indexOf('token=') !== -1));
+
+            if (isViteHmr) {
+              var target = new EventTarget();
+              target.url = String(url);
+              target.protocol = Array.isArray(protocols) ? protocols[0] : (protocols || '');
+              target.readyState = 1; // WebSocket.OPEN
+              target.OPEN = 1;
+              target.CONNECTING = 0;
+              target.CLOSING = 2;
+              target.CLOSED = 3;
+              target.binaryType = 'blob';
+              target.bufferedAmount = 0;
+              target.extensions = '';
+              target.send = function() {};
+              target.close = function() {
+                target.readyState = 3;
+                var closeEv = new Event('close');
+                target.dispatchEvent(closeEv);
+                if (typeof target._onclose === 'function') target._onclose(closeEv);
+              };
+              Object.defineProperty(target, 'onopen', {
+                get: function() { return this._onopen; },
+                set: function(fn) { this._onopen = fn; }
+              });
+              Object.defineProperty(target, 'onclose', {
+                get: function() { return this._onclose; },
+                set: function(fn) { this._onclose = fn; }
+              });
+              Object.defineProperty(target, 'onerror', {
+                get: function() { return this._onerror; },
+                set: function(fn) { this._onerror = fn; }
+              });
+              Object.defineProperty(target, 'onmessage', {
+                get: function() { return this._onmessage; },
+                set: function(fn) { this._onmessage = fn; }
+              });
+              setTimeout(function() {
+                var openEv = new Event('open');
+                target.dispatchEvent(openEv);
+                if (typeof target._onopen === 'function') target._onopen(openEv);
+              }, 0);
+              return target;
+            }
+            return new OrigWebSocket(url, protocols);
+          }
+          MockViteWebSocket.prototype = OrigWebSocket.prototype;
+          MockViteWebSocket.CONNECTING = OrigWebSocket.CONNECTING;
+          MockViteWebSocket.OPEN = OrigWebSocket.OPEN;
+          MockViteWebSocket.CLOSING = OrigWebSocket.CLOSING;
+          MockViteWebSocket.CLOSED = OrigWebSocket.CLOSED;
+          window.WebSocket = MockViteWebSocket;
+        }
+
+        // Suppress console.error messages related to Vite WebSocket disconnections
+        var origConsoleError = console.error;
+        console.error = function() {
+          var msg = '';
+          for (var i = 0; i < arguments.length; i++) {
+            var item = arguments[i];
+            if (item && (item.message || item.stack)) {
+              msg += ' ' + (item.message || item.stack);
+            } else {
+              msg += ' ' + String(item);
+            }
+          }
+          if (msg.indexOf('WebSocket') !== -1 || msg.indexOf('ws://') !== -1 || msg.indexOf('wss://') !== -1 || msg.indexOf('closed without opened') !== -1) {
+            return;
+          }
+          return origConsoleError.apply(console, arguments);
+        };
+
+        // Suppress unhandled errors and rejections for Vite HMR WebSockets
+        window.addEventListener('error', function(event) {
+          var msg = (event && (event.message || (event.error && (event.error.message || event.error.stack)))) || '';
+          if (typeof msg === 'string' && (msg.indexOf('WebSocket') !== -1 || msg.indexOf('ws://') !== -1 || msg.indexOf('wss://') !== -1 || msg.indexOf('closed without opened') !== -1)) {
+            event.stopImmediatePropagation();
+            event.preventDefault();
+            return true;
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function(event) {
+          var reason = event && event.reason;
+          var msg = (reason && (reason.message || reason.stack || String(reason))) || '';
+          if (typeof msg === 'string' && (msg.indexOf('WebSocket') !== -1 || msg.indexOf('ws://') !== -1 || msg.indexOf('wss://') !== -1 || msg.indexOf('closed without opened') !== -1)) {
+            event.stopImmediatePropagation();
+            event.preventDefault();
+          }
+        }, true);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

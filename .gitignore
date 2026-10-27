@@ -1,0 +1,334 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+import datetime
+import os
+import webbrowser
+import pyautogui
+import pyttsx3
+import speech_recognition as sr
+
+# आवाज़ (Voice) सेट करने के लिए इनिशियलाइज़ेशन
+engine = pyttsx3.init("sapi5")
+voices = engine.getProperty("voices")
+# voices[0] = Male voice, voices[1] = Female voice
+engine.setProperty("voice", voices[0].id)
+engine.setProperty("rate", 175)  និយាយ की स्पीड
+
+
+def speak(audio):
+  print(f"Jarvis: {audio}")
+  engine.say(audio)
+  engine.runAndWait()
+
+
+def wish_me():
+  hour = int(datetime.datetime.now().hour)
+  if hour >= 0 and hour < 12:
+    speak("गुड मॉर्निंग मुस्तफा साहिब!")
+  elif hour >= 12 and hour < 18:
+    speak("गुड आफ्टरनून!")
+  else:
+    speak("गुड इवनिंग!")
+  speak("मैं जार्विस हूँ। बताइए, आज आपके लिए क्या मदद कर सकता हूँ?")
+
+
+def take_command():
+  """माइक्रोफोन से आवाज़ सुनकर उसे टेक्स्ट में बदलेगा"""
+  r = sr.Recognizer()
+  with sr.Microphone() as source:
+    print("सुन रहा हूँ (Listening)...")
+    r.pause_threshold = 1
+    audio = r.listen(source)
+
+  try:
+    print("पहचान रहा हूँ (Recognizing)...")
+    query = r.recognize_google(audio, language="en-in")
+    print(f"आपने कहा: {query}\n")
+  except Exception as e:
+    print("माफ़ कीजिए, मैं समझ नहीं पाया। कृपया दोबारा बोलिए...")
+    return "None"
+  return query.lower()
+
+
+if __name__ == "__main__":
+  wish_me()
+  while True:
+    query = take_command()
+
+    # 1. क्रोम पर कुछ भी सर्च करने के लिए
+    if "open chrome and search" in query or "chrome mein search" in query:
+      speak("क्या सर्च करना है?")
+      search_query = take_command()
+      webbrowser.open(f"https://www.google.com/search?q={search_query}")
+      speak(f"मैंने क्रोम पर {search_query} सर्च कर दिया है।")
+
+    # 2. सिर्फ क्रोम नया टैब या ब्राउज़र खोलने के लिए
+    elif "open chrome" in query or "browser open karo" in query:
+      speak("क्रोम खोल रहा हूँ...")
+      os.startfile(
+          "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+      )  # आपके PC में पाथ अलग हो सकता है
+
+    # 3. यूट्यूब खोलने के लिए
+    elif "open youtube" in query:
+      speak("यूट्यूब खोल रहा हूँ...")
+      webbrowser.open("https://www.youtube.com")
+
+    # 4. समय जानने के लिए
+    elif "the time" in query or "samay" in query:
+      strTime = datetime.datetime.now().strftime("%H:%M:%S")
+      speak(f"सर, अभी समय हुआ है {strTime}")
+
+    # 5. कंप्यूटर बंद (Shutdown) करने के लिए
+    elif "shutdown computer" in query or "system off karo" in query:
+      speak("कंप्यूटर बंद कर रहा हूँ। अलविदा!")
+      os.system("shutdown /s /t 1")
+
+    # 6. जार्विस को रोकने के लिए
+    elif "exit" in query or "stop" in query or "bye" in query:
+      speak("अलविदा मुस्तफा साहिब! आपका दिन शुभ रहे।")
+      breakimport datetime
+import os
+import google.generativeai as genai
+import pyttsx3
+import speech_recognition as sr
+
+# अपने Gemini API Key यहाँ डालें
+GOOGLE_API_KEY = "YOUR_GEMINI_API_KEY_HERE"
+genai.configure(api_key=GOOGLE_API_KEY)
+
+# Gemini Model सेट करें (यह किसी भी भाषा में स्मार्ट जवाब देने में सक्षम है)
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+# टेक्स्ट-टू-स्पीच इंजन इनिशियलाइज़ेशन
+engine = pyttsx3.init("sapi5")
+voices = engine.getProperty("voices")
+engine.setProperty("voice", voices[0].id)
+engine.setProperty("rate", 175)
+
+
+def speak(audio):
+  print(f"Jarvis: {audio}")
+  engine.say(audio)
+  engine.runAndWait()
+
+
+def wish_me():
+  hour = int(datetime.datetime.now().hour)
+  if hour >= 0 and hour < 12:
+    speak("Good morning! How can I help you today?")
+  elif hour >= 12 and hour < 18:
+    speak("Good afternoon! How can I assist you?")
+  else:
+    speak("Good evening! How can I help you?")
+
+
+def take_command():
+  """माइक्रोफोन से आवाज़ सुनकर उसे टेक्स्ट में बदलेगा (यह किसी भी भाषा को कैप्चर कर सकता है)"""
+  r = sr.Recognizer()
+  with sr.Microphone() as source:
+    print("Listening...")
+    r.pause_threshold = 1
+    audio = r.listen(source)
+
+  try:
+    print("Recognizing...")
+    # 'hi-IN' या 'en-IN' या ऑटो-डिटेक्ट के लिए खाली छोड़ सकते हैं या 'auto' सेट कर सकते हैं
+    query = r.recognize_google(audio, language="en-IN")
+    print(f"User said: {query}\n")
+  except Exception as e:
+    print("Could not understand. Please say that again...")
+    return "None"
+  return query
+
+
+def ask_ai(query):
+  """जेमिनी AI से स्मार्ट और उसी भाषा में जवाब प्राप्त करने के लिए"""
+  try:
+    prompt = (
+        "You are Jarvis, an advanced AI assistant. Reply to the following"
+        " user prompt in the exact same language the user spoke, providing a"
+        f" very accurate, high-quality, and natural response: {query}"
+    )
+    response = model.generate_content(prompt)
+    return response.text
+  except Exception as e:
+    return "I am sorry, I am having trouble connecting to my brain right now."
+
+
+if __name__ == "__main__":
+  wish_me()
+  while True:
+    query = take_command()
+
+    if query != "None":
+      # एग्जिट कमांड चेक करें
+      if (
+          "exit" in query.lower()
+          or "stop" in query.lower()
+          or "goodbye" in query.lower()
+      ):
+        speak("Goodbye! Have a great day.")
+        break
+
+      # बाकी हर सवाल के लिए जेमिनी AI से स्मार्ट जवाब लें
+      print("Thinking...")
+      ai_response = ask_ai(query)
+      print(f"Jarvis: {ai_response}")
+      speak(ai_response)import threading
+import tkinter as tk
+import google.generativeai as genai
+import pyttsx3
+import speech_recognition as sr
+
+# API setup
+genai.configure(api_key="YOUR_GEMINI_API_KEY_HERE")
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+# TTS setup
+engine = pyttsx3.init()
+engine.setProperty("rate", 175)
+
+is_live = False
+
+
+def speak(text):
+  engine.say(text)
+  engine.runAndWait()
+
+
+def listen_and_reply():
+  global is_live
+  r = sr.Recognizer()
+  with sr.Microphone() as source:
+    while is_live:
+      try:
+        status_label.config(text="Status: Listening...")
+        audio = r.listen(source, timeout=5, phrase_time_limit=8)
+        status_label.config(text="Status: Thinking...")
+
+        query = r.recognize_google(audio)
+        prompt = f"Reply in the exact same language neutrally and concisely: {query}"
+        response = model.generate_content(prompt).text
+
+        status_label.config(text="Status: Speaking...")
+        speak(response)
+      except Exception:
+        status_label.config(text="Status: Live Call Active")
+
+
+def toggle_call():
+  global is_live
+  if not is_live:
+    is_live = True
+    btn.config(text="End Live Call", bg="#ff4d4d", fg="white")
+    status_label.config(text="Status: Live Call Active")
+    threading.Thread(target=listen_and_reply, daemon=True).start()
+  else:
+    is_live = False
+    btn.config(text="Start Live Call", bg="#4CAF50", fg="white")
+    status_label.config(text="Status: Disconnected")
+
+
+# UI Widget Setup (Always-on-top on Home Screen)
+root = tk.Tk()
+root.title("Jarvis Live")
+root.geometry("250x120")
+root.attributes("-topmost", True)  # Home screen par sabse upar rahega
+root.configure(bg="#222222")
+
+status_label = tk.Label(
+    root,
+    text="Status: Disconnected",
+    fg="#00e676",
+    bg="#222222",
+    font=("Arial", 10),
+)
+status_label.pack(pady=10)
+
+btn = tk.Button(
+    root,
+    text="Start Live Call",
+    font=("Arial", 11, "bold"),
+    bg="#4CAF50",
+    fg="white",
+    command=toggle_call,
+)
+btn.pack(pady=5)
+
+root.mainloop()import pystray
+from pystray import MenuItem as item
+from PIL import Image, ImageDraw
+import speech_recognition as sr
+import pyttsx3
+import google.generativeai as genai
+import threading
+
+# API और मॉडल सेटअप
+genai.configure(api_key="YOUR_GEMINI_API_KEY_HERE")
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+# TTS सेटअप
+engine = pyttsx3.init()
+engine.setProperty("rate", 175)
+
+
+def speak(text):
+  engine.say(text)
+  engine.runAndWait()
+
+
+def listen_and_talk(icon, item):
+  """जैसे ही आप ट्रे आइकॉन से क्लिक करेंगे, यह सुनना शुरू कर देगा"""
+
+  def run_ai():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+      speak("जी हुक्म, मैं सुन रहा हूँ...")
+      try:
+        audio = r.listen(source, timeout=5, phrase_time_limit=8)
+        query = r.recognize_google(audio)
+
+        # जेमिनी से उसी ज़बान में स्मार्ट जवाब लेना
+        prompt = (
+            "Reply in the exact same language neutrally and concisely:"
+            f" {query}"
+        )
+        response = model.generate_content(prompt).text
+        speak(response)
+      except Exception:
+        speak("माफ़ कीजिए, मैं समझ नहीं पाया।")
+
+  # बैकग्राउंड में रन करने के लिए ताकि सिस्टम हैंग न हो
+  threading.Thread(target=run_ai).start()
+
+
+def quit_app(icon, item):
+  icon.stop()
+
+
+# ट्रे के लिए एक छोटा सा आइकॉन (गोलाकार डॉट) प्रोग्रामेटिकली बनाना
+def create_image():
+  image = Image.new("RGB", (64, 64), color=(30, 30, 30))
+  dc = ImageDraw.Draw(image)
+  dc.rectangle((16, 16, 48, 48), fill=(0, 230, 118))
+  return image
+
+
+# सिस्टम ट्रे मेनू सेट करना
+menu = (
+    item("Talk to Jarvis", listen_and_talk),
+    item("Exit", quit_app),
+)
+
+icon = pystray.Icon("JarvisTray", create_image(), "Jarvis AI", menu)
+
+if __name__ == "__main__":
+  # यह सीधे सिस्टम ट्रे में चलेगा, होम स्क्रीन पर कोई विंडो नहीं आएगी
+  icon.run()
